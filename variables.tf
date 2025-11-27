@@ -6,16 +6,15 @@ variable "project" {
 
 variable "primary_region" {
   type        = string
-  default     = "eastus"
+  default     = "westus2"
   description = "Primary Azure region"
 }
 
 variable "regions" {
   type = list(string)
   default = [
-    "eastus",
-    "centralus",
-    "westus"
+    "westus2",
+    "centralus"
   ]
   description = "List of Azure regions for multi-region deployment"
 }
@@ -77,7 +76,7 @@ variable "container_apps" {
 variable "vnet_address_spaces" {
   type = map(string)
   default = {
-    "eastus"    = "10.10.0.0/16"
+    "westus2"   = "10.10.0.0/16"
     "centralus" = "10.20.0.0/16"
     "westus"    = "10.30.0.0/16"
   }

@@ -1,10 +1,12 @@
-# 🌍 Multi-Region Disaster Recovery (DR) Infrastructure
+# 🌍 Modular Multi-Region Azure Infrastructure with Microservices
 
-**Cost-optimized Azure multi-region infrastructure with automatic failover for team demos**
+**Production-grade, modular Azure multi-region infrastructure with private endpoints, managed identities, and microservices architecture**
 
 ![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat&logo=microsoft-azure&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=flat&logo=terraform&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Demo_Ready-green)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Production_Ready-green)
 
 ---
 
@@ -12,38 +14,38 @@
 
 - [Overview](#-overview)
 - [Architecture](#-architecture)
-- [What's Included](#-whats-included)
-- [Cost Information](#-cost-information)
+- [Features](#-features)
+- [Infrastructure Components](#-infrastructure-components)
+- [Microservices](#-microservices)
 - [Quick Start](#-quick-start)
-- [Detailed Deployment](#-detailed-deployment)
+- [Deployment](#-deployment)
 - [Testing](#-testing)
-- [DR Failover Demo](#-dr-failover-demo)
 - [Cleanup](#-cleanup)
-- [Troubleshooting](#-troubleshooting)
+- [Cost Estimate](#-cost-estimate)
 - [Project Structure](#-project-structure)
 
 ---
 
 ## 🎯 Overview
 
-This project creates a **production-grade, multi-region infrastructure** on Azure designed to demonstrate **Disaster Recovery (DR)** capabilities. It's been **cost-optimized** specifically for team demos while maintaining all critical DR features.
+This project implements a **modular, multi-region Azure infrastructure** with a microservices architecture. It demonstrates enterprise-grade patterns including:
 
-### **Key Features**
+- **Modular Service Isolation**: Separate resource groups for each service type
+- **Zero-Trust Security**: Private endpoints, managed identities, VNet integration
+- **High Availability**: Multi-region deployment with SQL failover groups
+- **Microservices Architecture**: 5 Python FastAPI services with proper isolation
+- **Infrastructure as Code**: 100% Terraform managed with reusable modules
 
-✅ **Multi-Region Architecture**: 2 Azure regions (Central US + East US 2)  
-✅ **Automatic SQL Failover**: Zero data loss with continuous replication  
-✅ **Container Apps**: Auto-scaling microservices across regions  
-✅ **Private Networking**: VNet peering + Private Endpoints  
-✅ **Geo-Redundant Storage**: GRS replication  
-✅ **Infrastructure as Code**: 100% Terraform managed  
-✅ **Cost Optimized**: 60-70% cheaper than full production setup  
+### **Key Highlights**
 
-### **Use Cases**
-
-- 🎭 Demonstrating DR capabilities to stakeholders
-- 📚 Learning multi-region Azure architecture
-- 🧪 Testing failover scenarios
-- 🏗️ Foundation for production DR infrastructure
+✅ **8 Separate Resource Groups** - Modular service isolation
+✅ **1 Public Gateway + 8 Private Services** - Secure by default architecture
+✅ **Managed Identities** - Passwordless authentication for all services
+✅ **Private Endpoints** - Secure connectivity to PaaS services
+✅ **SQL Failover Groups** - Automatic database replication and failover
+✅ **GRS Storage** - Geo-redundant storage across regions
+✅ **5 FastAPI Microservices** - Production-ready Python services
+✅ **VNet Integration** - All services communicate over private network
 
 ---
 
@@ -52,441 +54,424 @@ This project creates a **production-grade, multi-region infrastructure** on Azur
 ### **High-Level Architecture**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         INTERNET                                │
-└────────────────────────┬────────────────────────────────────────┘
-                         │
-                         ▼
-              ┌──────────────────────┐
-              │   Public Gateway     │
-              │   (Central US)       │
-              │   Container App      │
-              └──────────┬───────────┘
-                         │
-         ┌───────────────┴───────────────┐
-         │       VNet Peering           │
-         │   (Private Network Mesh)     │
-         └───────────┬──────────┬───────┘
-                     │          │
-          ┌──────────▼─────┐  ┌▼──────────────┐
-          │   Central US   │  │   East US 2   │
-          │   (PRIMARY)    │  │  (SECONDARY)  │
-          │                │  │               │
-          │ • VNet         │  │ • VNet        │
-          │ • SQL Primary  │◄─┤ • SQL Replica │
-          │ • Storage GRS  │  │ • Storage GRS │
-          │ • 2 Container  │  │ • 2 Container │
-          │   Apps         │  │   Apps        │
-          │ • Private      │  │ • Private     │
-          │   Endpoints    │  │   Endpoints   │
-          └────────────────┘  └───────────────┘
-                     │          │
-                     └──────────┘
-                  SQL Failover Group
-              (Continuous Replication)
+                         INTERNET
+                            │
+                            ▼
+                ┌──────────────────────┐
+                │   Gateway Service    │ ◄─── PUBLIC (External Access)
+                │   (West US 2)        │
+                │   FastAPI + Routing  │
+                └──────────┬───────────┘
+                           │
+        ┌──────────────────┴──────────────────┐
+        │      Private VNet (Internal)        │
+        │      Mesh Topology + Peering        │
+        └──────┬────────┬────────┬────────────┘
+               │        │        │
+    ┌──────────▼───┐  ┌▼────────▼───┐  ┌────▼──────┐
+    │  WEST US 2   │  │ CENTRAL US   │  │ SHARED    │
+    │  (Primary)   │  │ (Secondary)  │  │ RESOURCES │
+    └──────────────┘  └──────────────┘  └───────────┘
+    │                 │                  │
+    │ • API Service   │ • API Service    │ • Private
+    │ • Worker        │ • Worker         │   DNS Zones
+    │ • Processor     │ • Processor      │ • VNet
+    │ • Scheduler     │ • Scheduler      │   Peering
+    │ • SQL Primary   │ • SQL Secondary  │ • NSGs
+    │ • Storage GRS   │ • Storage GRS    │
+    │ • Private       │ • Private        │
+    │   Endpoints     │   Endpoints      │
+    └─────────────────┴──────────────────┴───────────┘
+               │                 │
+               └─────────┬───────┘
+                   SQL Failover Group
+               (Automatic Replication)
 ```
+
+### **Security Architecture**
+
+```
+External Request → Public Gateway (HTTPS)
+                       │
+                       ↓
+            Internal VNet (Private)
+                       │
+         ┌─────────────┴─────────────┐
+         │                           │
+         ↓                           ↓
+    Private Services          Private Endpoints
+    (Internal Only)          (SQL + Storage)
+         │                           │
+         └──────────┬────────────────┘
+                    ↓
+           Managed Identity Auth
+          (No passwords/secrets)
+```
+
+---
+
+## ✨ Features
+
+### **1. Modular Resource Groups**
+
+Each service type has its own resource group for better isolation and management:
+
+- `demo-networking-rg-prod` - Shared networking (VNets, DNS, NSGs)
+- `demo-gateway-rg-prod` - Public gateway service
+- `demo-api-rg-prod` - API services
+- `demo-worker-rg-prod` - Worker services
+- `demo-processor-rg-prod` - Processor services
+- `demo-scheduler-rg-prod` - Scheduler services
+- `demo-database-rg-prod` - SQL servers and databases
+- `demo-storage-rg-prod` - Storage accounts
+
+### **2. Security Features**
+
+- **Managed Identities**: All 9 container apps use system-assigned managed identities
+- **Private Endpoints**: SQL and Storage accessible only via private IPs
+- **VNet Integration**: All services communicate over private network
+- **Private DNS Zones**: Automatic DNS resolution for private endpoints
+- **NSG Rules**: Network security groups protect container app subnets
+- **TLS 1.2**: Minimum TLS version enforced on all services
+
+### **3. High Availability**
+
+- **Multi-Region**: Deployed across West US 2 and Central US
+- **SQL Failover Groups**: Automatic database failover with 60-min grace period
+- **Geo-Redundant Storage**: GRS replication across regions
+- **Auto-Scaling**: Container apps scale based on load (1-5 replicas)
+- **VNet Peering**: Mesh topology for cross-region communication
+
+### **4. Microservices**
+
+Five Python FastAPI microservices with proper separation of concerns:
+
+1. **Gateway** - Public entry point and routing
+2. **API Service** - REST API and CRUD operations
+3. **Worker Service** - Background job processing
+4. **Processor Service** - Data processing and transformations
+5. **Scheduler Service** - Task scheduling and cron jobs
+
+---
+
+## 📦 Infrastructure Components
+
+### **Resource Summary**
+
+| Component | Count | Visibility | Regions |
+|-----------|-------|------------|---------|
+| **Resource Groups** | 8 | N/A | N/A |
+| **Virtual Networks** | 2 | Private | Both |
+| **Subnets** | 8 | Private | 4 per region |
+| **VNet Peerings** | 2 | Private | Bidirectional |
+| **Container App Environments** | 2 | Private | 1 per region |
+| **Gateway Service** | 1 | **PUBLIC** | West US 2 |
+| **API Services** | 2 | Private | Both regions |
+| **Worker Services** | 2 | Private | Both regions |
+| **Processor Services** | 2 | Private | Both regions |
+| **Scheduler Services** | 2 | Private | Both regions |
+| **SQL Servers** | 2 | Private | Both regions |
+| **SQL Databases** | 2 | Private | Both regions |
+| **SQL Failover Groups** | 1 | N/A | Cross-region |
+| **Storage Accounts** | 2 | Private | Both regions |
+| **Private Endpoints** | 4 | Private | 2 SQL + 2 Storage |
+| **Private DNS Zones** | 3 | Private | SQL, Storage, Container Apps |
+| **NSGs** | 2 | Private | 1 per region |
+| **Log Analytics Workspaces** | 2 | Private | 1 per region |
+
+**Total: ~73 Azure Resources**
 
 ### **Network Design**
 
 | Region | VNet CIDR | Container Apps | Private Endpoints | Database | Storage |
 |--------|-----------|----------------|-------------------|----------|---------|
-| **Central US** | 10.10.0.0/16 | 10.10.0.0/23 | 10.10.4.0/24 | 10.10.5.0/24 | 10.10.6.0/24 |
-| **East US 2** | 10.20.0.0/16 | 10.20.0.0/23 | 10.20.4.0/24 | 10.20.5.0/24 | 10.20.6.0/24 |
+| **West US 2** | 10.10.0.0/16 | 10.10.0.0/23 | 10.10.4.0/24 | 10.10.5.0/24 | 10.10.6.0/24 |
+| **Central US** | 10.20.0.0/16 | 10.20.0.0/23 | 10.20.4.0/24 | 10.20.5.0/24 | 10.20.6.0/24 |
 
 ---
 
-## 📦 What's Included
+## 🐍 Microservices
 
-### **Infrastructure Resources**
+All microservices are built with **Python FastAPI** and include:
 
-| Resource Type | Count | Purpose |
-|---------------|-------|---------|
-| **Resource Group** | 1 | Container for all resources |
-| **Virtual Networks** | 2 | Network isolation per region |
-| **Subnets** | 8 | 4 per region (Container Apps, Private Endpoints, Database, Storage) |
-| **VNet Peerings** | 2 | Bidirectional connectivity |
-| **NSGs** | 2 | Security rules for Container Apps |
-| **Log Analytics** | 2 | Monitoring per region |
-| **Private DNS Zones** | 3 | Storage, SQL, Container Apps |
-| **Storage Accounts** | 2 | GRS app storage (1 per region) |
-| **Storage Containers** | 2 | Blob containers for app data |
-| **SQL Servers** | 2 | One per region |
-| **SQL Databases** | 4 | App DB + Analytics DB (2 per region) |
-| **SQL Failover Groups** | 2 | Automatic DR for databases |
-| **Container App Envs** | 2 | Runtime environments |
-| **Container Apps** | 5 | 1 public gateway + 4 private microservices |
-| **Private Endpoints** | 4 | Secure access to Storage (2) + SQL (2) |
+- Health check endpoints
+- Environment-based configuration
+- Azure SDK integration
+- Docker containerization
+- Production-ready error handling
 
-**TOTAL: ~42 Azure Resources**
+### **1. Gateway Service (Public)**
 
-### **Container Apps**
+**Location**: `microservices/gateway/`
+**Purpose**: Public entry point that routes external traffic to internal services
 
-1. **Gateway** (Public) - Central US
-   - Entry point for all traffic
-   - 1.0 CPU, 2GB RAM
-   - Auto-scales: 2-10 replicas
+**Features**:
+- FastAPI with async/await
+- Routes to all internal services
+- System status aggregation
+- Health checks for all backend services
 
-2. **API Service** (Private) - Both regions
-   - Internal API microservice
-   - 0.25 CPU, 0.5GB RAM
-   - Auto-scales: 1-2 replicas
+**Endpoints**:
+- `GET /health` - Gateway health check
+- `GET /api/*` - Proxy to API service
+- `GET /worker/*` - Proxy to Worker service
+- `GET /process/*` - Proxy to Processor service
+- `GET /scheduler/*` - Proxy to Scheduler service
+- `GET /system/status` - Overall system status
 
-3. **Worker Service** (Private) - Both regions
-   - Background processing
-   - 0.25 CPU, 0.5GB RAM
-   - Auto-scales: 1-2 replicas
+### **2. API Service (Private)**
 
----
+**Location**: `microservices/api-service/`
+**Purpose**: RESTful API for CRUD operations and data queries
 
-## 💰 Cost Information
+**Features**:
+- Pydantic models for validation
+- In-memory storage (demo)
+- SQL database integration ready
+- Query and statistics endpoints
 
-### **Monthly Estimate (Optimized for Demo)**
+**Endpoints**:
+- `GET /items` - List all items
+- `POST /items` - Create new item
+- `GET /items/{id}` - Get item by ID
+- `PUT /items/{id}` - Update item
+- `DELETE /items/{id}` - Delete item
+- `GET /stats` - Service statistics
 
-| Service | Quantity | Unit Cost | Monthly Cost |
-|---------|----------|-----------|--------------|
-| **VNets** | 2 | Free | $0 |
-| **VNet Peering** | ~2 GB/day | $0.01/GB | ~$5 |
-| **SQL Databases** | 4 (S2/S3 tier) | $30-75/db | ~$180 |
-| **Storage Accounts** | 2 (GRS) | $5/account | ~$10 |
-| **Container Apps** | 5 apps | $5-10/app | ~$25-50 |
-| **Log Analytics** | 2 (5GB/mo each) | $2.50/GB | ~$25 |
-| **Private Endpoints** | 4 | $0.01/hr | ~$3 |
+### **3. Worker Service (Private)**
 
-**💵 TOTAL: $150-250/month (~$5-8 per day)**
+**Location**: `microservices/worker-service/`
+**Purpose**: Background job processing and async tasks
 
-### **Cost Optimization vs Full Production**
+**Features**:
+- Job queue management
+- Job status tracking
+- Async job processing
+- Job history
 
-| Metric | Full Production | Demo Optimized | Savings |
-|--------|----------------|----------------|---------|
-| Regions | 3 | 2 | -33% |
-| Container Apps | 16 | 5 | -69% |
-| Storage Accounts | 9 | 2 | -78% |
-| Monthly Cost | $380-680 | $150-250 | **~60-70%** |
+**Endpoints**:
+- `POST /job/submit` - Submit new job
+- `GET /job/{id}` - Get job status
+- `GET /jobs/active` - List active jobs
+- `GET /jobs/completed` - List completed jobs
 
-### **Cost-Saving Tips**
+### **4. Processor Service (Private)**
 
-1. 💡 **Stop when not in use**: `terraform destroy` when done demoing
-2. 💡 **Use Dev/Test pricing** for SQL databases (-40%)
-3. 💡 **Reduce Log Analytics retention** to 7 days
-4. 💡 **Lower SQL tier** to Basic for non-critical demos
-5. 💡 **Scale down** container apps during off-hours
+**Location**: `microservices/processor-service/`
+**Purpose**: Compute-intensive data processing and transformations
+
+**Features**:
+- Data aggregation
+- Data transformation
+- Analysis operations
+- Filtering capabilities
+
+**Endpoints**:
+- `POST /process/aggregate` - Aggregate data
+- `POST /process/transform` - Transform data
+- `POST /process/analyze` - Analyze data
+- `POST /process/filter` - Filter data
+
+### **5. Scheduler Service (Private)**
+
+**Location**: `microservices/scheduler-service/`
+**Purpose**: Task scheduling and cron job management
+
+**Features**:
+- APScheduler integration
+- Cron job scheduling
+- Schedule management
+- Task execution history
+
+**Endpoints**:
+- `POST /schedule/create` - Create scheduled task
+- `GET /schedule/list` - List all schedules
+- `GET /schedule/{id}` - Get schedule details
+- `DELETE /schedule/{id}` - Delete schedule
+- `GET /status` - Scheduler status
+
+### **Python Dependencies**
+
+All services share common dependencies:
+
+```python
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+httpx==0.25.1
+python-multipart==0.0.6
+azure-identity==1.15.0
+azure-storage-blob==12.19.0
+pyodbc==5.0.1
+apscheduler==3.10.4
+```
 
 ---
 
 ## 🚀 Quick Start
 
-**3 Simple Steps to Deploy and Demo**
-
 ### **Prerequisites**
 
 - ✅ Azure CLI installed (`az --version`)
 - ✅ Terraform 1.5.0+ installed (`terraform --version`)
-- ✅ Azure subscription with sufficient quota
-- ✅ PowerShell 7+ (Windows) or Bash (Linux/Mac)
+- ✅ Azure subscription with Owner/Contributor access
+- ✅ Git for version control
 
-### **Step 1: Deploy Infrastructure** (30 minutes)
+### **3-Step Deployment**
 
-```powershell
-# Navigate to project directory
-cd d:\multi-region
-
-# Login to Azure
+```bash
+# 1. Login to Azure
 az login
+az account set --subscription <your-subscription-id>
 
-# Verify subscription
-az account show
+# 2. Clone repository (if not already cloned)
+git clone https://github.com/yourusername/multi-region-terraform-code
+cd multi-region-terraform-code
 
-# Initialize Terraform
+# 3. Deploy infrastructure
 terraform init
-
-# Deploy infrastructure
 terraform apply -auto-approve
 ```
 
-⏳ **Wait**: 20-30 minutes for deployment to complete
-
-### **Step 2: Verify Deployment** (2 minutes)
-
-```powershell
-# Run quick validation test
-.\quick-test.ps1
-```
-
-✅ **Expected**: All 7 tests should pass
-
-### **Step 3: Demo Disaster Recovery** (10 minutes)
-
-```powershell
-# Run DR failover demonstration
-.\dr-failover-test.ps1
-```
-
-🎭 **What happens**:
-1. Shows current SQL replication status
-2. Performs manual failover (Central US → East US 2)
-3. Verifies failover completed successfully
-4. Optionally fails back to original primary
+⏳ **Deployment time**: 20-30 minutes
 
 ---
 
-## 📋 Detailed Deployment
+## 📋 Deployment
 
-### **1. Clone or Navigate to Project**
+### **Step 1: Configure Subscription**
 
-```powershell
-cd d:\multi-region
-```
-
-### **2. Review Configuration**
-
-Open `terraform.tfvars` to see the configuration:
+Update `provider.tf` with your subscription ID:
 
 ```hcl
-# Project settings
-project     = "demo"
-environment = "demo"
-
-# Regions (cost optimized)
-primary_region = "centralus"
-regions = ["centralus", "eastus2"]
-
-# SQL credentials
-sql_admin_username = "sqladmin"
-sql_admin_password = "YourSecurePassword123!"
+provider "azurerm" {
+  features {}
+  subscription_id = "YOUR-SUBSCRIPTION-ID"
+}
 ```
 
-⚠️ **Important**: Change the SQL password for production use!
+### **Step 2: Review Variables**
 
-### **3. Initialize Terraform**
+Check `variables.tf` for configuration:
 
-```powershell
+```hcl
+variable "project" {
+  default = "demo"
+}
+
+variable "primary_region" {
+  default = "westus2"
+}
+
+variable "regions" {
+  default = ["westus2", "centralus"]
+}
+
+variable "environment" {
+  default = "prod"
+}
+
+variable "sql_admin_username" {
+  default = "sqladmin"
+}
+
+variable "sql_admin_password" {
+  sensitive = true
+  default   = "P@ssw0rd123!Complex"
+}
+```
+
+⚠️ **Important**: Change SQL password for production!
+
+### **Step 3: Initialize Terraform**
+
+```bash
 terraform init
 ```
 
-This downloads the Azure provider and initializes the backend.
+### **Step 4: Plan Deployment**
 
-### **4. Preview Changes (Optional)**
-
-```powershell
+```bash
 terraform plan
 ```
 
-Review what will be created. You should see ~42 resources.
+Review what will be created (~73 resources).
 
-### **5. Deploy Infrastructure**
+### **Step 5: Deploy**
 
-```powershell
+```bash
 terraform apply -auto-approve
 ```
 
-Or without auto-approve to manually confirm:
+### **Step 6: Get Outputs**
 
-```powershell
-terraform apply
-```
-
-### **6. Monitor Deployment**
-
-Terraform will show progress:
-
-```
-azurerm_resource_group.main: Creating...
-azurerm_virtual_network.regional_vnets["centralus"]: Creating...
-azurerm_virtual_network.regional_vnets["eastus2"]: Creating...
-...
-Apply complete! Resources: 42 added, 0 changed, 0 destroyed.
-```
-
-### **7. Get Outputs**
-
-```powershell
+```bash
 # View all outputs
 terraform output
 
-# Get specific output
-terraform output primary_gateway_url
+# Get gateway URL
+terraform output gateway_url
 ```
 
 ---
 
 ## ✅ Testing
 
-### **Quick Test Script**
+### **1. Test Gateway (Public)**
 
-The `quick-test.ps1` script validates your deployment:
+```bash
+# Get gateway URL
+GATEWAY_URL=$(terraform output -raw gateway_fqdn)
 
-```powershell
-.\quick-test.ps1
+# Test health endpoint
+curl https://$GATEWAY_URL/health
+
+# Test system status
+curl https://$GATEWAY_URL/system/status
 ```
 
-**Tests Performed:**
+### **2. Test Internal Services (via Gateway)**
 
-1. ✅ **Resource Group** - Verifies RG exists
-2. ✅ **Virtual Networks** - Checks for 2 VNets
-3. ✅ **SQL Servers** - Validates 2 SQL servers
-4. ✅ **SQL Failover Groups** - Confirms DR is configured
-5. ✅ **Storage Accounts** - Checks 2 storage accounts
-6. ✅ **Container Apps** - Validates 5 apps deployed
-7. ✅ **Public Gateway** - Tests HTTP accessibility
+```bash
+# API Service
+curl https://$GATEWAY_URL/api/items
 
-**Expected Output:**
+# Worker Service - Submit job
+curl -X POST https://$GATEWAY_URL/worker/submit \
+  -H "Content-Type: application/json" \
+  -d '{"job_type":"data_import","payload":{}}'
 
-```
-🧪 Multi-Region DR Quick Test (Cost Optimized)
-================================================
+# Processor Service - Aggregate data
+curl -X POST https://$GATEWAY_URL/process/aggregate \
+  -H "Content-Type: application/json" \
+  -d '{"data":[{"value":10},{"value":20}],"operation":"sum"}'
 
-✅ Test 1: Checking Resource Group...
-  ✓ Resource Group exists: demo-rg-demo-cb61e6
-    Location: centralus
-
-✅ Test 2: Checking Virtual Networks...
-  ✓ Found 2 VNets (expected: 2)
-    - demo-vnet-centralus-demo in centralus
-    - demo-vnet-eastus2-demo in eastus2
-
-✅ Test 3: Checking SQL Servers...
-  ✓ Found 2 SQL Servers (expected: 2)
-    - demo-sql-centralus-demo in centralus
-    - demo-sql-eastus2-demo in eastus2
-
-✅ Test 4: Checking SQL Failover Groups (DR Critical)...
-  ✓ App Database FG: Primary
-  ✓ Analytics Database FG: Primary
-    - Primary: centralus
-    - Secondary: eastus2
-
-✅ Test 5: Checking Storage Accounts...
-  ✓ Found 2 Storage Accounts (expected: 2)
-
-✅ Test 6: Checking Container Apps...
-  ✓ Found 5 Container Apps (expected: 5)
-    - Public apps: 1 (Gateway)
-    - Private apps: 4 (API + Worker)
-
-✅ Test 7: Testing Public Gateway...
-  ✓ Gateway is accessible (HTTP 200)
-
-================================================
-📊 Test Summary (Cost Optimized Demo)
-================================================
-Passed: 7
-Failed: 0
-Success Rate: 100%
-
-🎉 All tests passed! Your DR infrastructure is ready!
+# Scheduler Service
+curl https://$GATEWAY_URL/scheduler/status
 ```
 
-### **Manual Testing Commands**
+### **3. Test Database Connectivity**
 
-```powershell
-# List all resources
-az resource list --resource-group demo-rg-demo-cb61e6 --output table
-
-# Check SQL server status
-az sql server list --resource-group demo-rg-demo-cb61e6 --output table
+```bash
+# Check SQL servers
+az sql server list --resource-group demo-database-rg-prod --output table
 
 # Check failover groups
-az sql failover-group list `
-  --resource-group demo-rg-demo-cb61e6 `
-  --server demo-sql-centralus-demo `
+az sql failover-group list \
+  --resource-group demo-database-rg-prod \
+  --server demo-sql-westus2-prod \
   --output table
-
-# Test gateway
-$url = terraform output -raw primary_gateway_url
-Invoke-WebRequest -Uri $url -UseBasicParsing
-
-# Open gateway in browser
-Start-Process (terraform output -raw primary_gateway_url)
 ```
 
----
+### **4. Test Storage Connectivity**
 
-## 🔥 DR Failover Demo
+```bash
+# List storage accounts
+az storage account list --resource-group demo-storage-rg-prod --output table
 
-### **What is a Failover?**
-
-A **failover** is the process of switching from the primary region to the secondary region when a disaster occurs. This demonstrates:
-- ✅ Business continuity during regional outages
-- ✅ Zero data loss with continuous replication
-- ✅ Automatic or manual failover capabilities
-- ✅ Quick recovery time objectives (RTO)
-
-### **Run the DR Test**
-
-```powershell
-.\dr-failover-test.ps1
+# Check private endpoints
+az network private-endpoint list --resource-group demo-storage-rg-prod --output table
 ```
-
-### **Demo Flow**
-
-#### **Step 1: Check Current Status**
-
-The script shows:
-- Current primary region (Central US)
-- Current secondary region (East US 2)
-- Replication status of both databases
-- Current failover group roles
-
-#### **Step 2: Confirm Failover**
-
-You'll be prompted:
-
-```
-⚠️  STEP 2: Failover Confirmation
-================================
-
-You are about to initiate a MANUAL FAILOVER:
-  Primary   (centralus)   → Becomes Secondary
-  Secondary (eastus2) → Becomes Primary
-
-Do you want to proceed with failover? (yes/no):
-```
-
-Type `yes` to continue.
-
-#### **Step 3: Perform Failover**
-
-The script executes:
-
-```powershell
-az sql failover-group set-primary `
-  --name demo-appdb-fg-demo `
-  --resource-group demo-rg-demo-cb61e6 `
-  --server demo-sql-eastus2-demo
-```
-
-⏳ Takes 30-60 seconds
-
-#### **Step 4: Verify Failover**
-
-Confirms:
-- ✅ East US 2 is now PRIMARY
-- ✅ Central US is now SECONDARY
-- ✅ Replication is still active
-- ✅ No data loss occurred
-
-#### **Step 5: Failback (Optional)**
-
-You can optionally fail back to the original primary:
-
-```
-🔙 STEP 5: Failback to Original Primary
-=========================================
-
-Would you like to fail back to the original primary (centralus)?
-
-Failback now? (yes/no):
-```
-
-### **Key Points to Highlight**
-
-During your team demo, emphasize:
-
-1. **Zero Downtime**: Applications continue running during failover
-2. **No Data Loss**: Continuous synchronous replication
-3. **Automatic Capability**: Can be configured for automatic failover (60-min grace period)
-4. **Manual Override**: Can manually trigger failover for planned maintenance
-5. **Multi-Region Apps**: Container apps running in both regions for redundancy
 
 ---
 
@@ -494,32 +479,107 @@ During your team demo, emphasize:
 
 ### **Destroy All Resources**
 
-When done with your demo:
-
-```powershell
+```bash
 terraform destroy -auto-approve
 ```
 
-Or with confirmation:
+This will delete all 73 resources including:
+- All 9 container apps
+- All 8 resource groups
+- SQL servers and databases
+- Storage accounts
+- Networking resources
 
-```powershell
-terraform destroy
-```
-
-⏳ Takes 10-15 minutes
+⏳ **Takes**: 10-15 minutes
 
 ### **Verify Cleanup**
 
-```powershell
-# Check if resource group still exists
-az group show --name demo-rg-demo-cb61e6
+```bash
+# Check resource groups
+az group list --query "[?starts_with(name, 'demo-')]" --output table
 ```
 
-Should return an error if successfully deleted.
+---
 
-### **Cost Savings**
+## 💰 Cost Estimate
 
-Destroying resources stops all charges. You can redeploy anytime using `terraform apply`.
+### **Monthly Cost Breakdown**
+
+| Service | Quantity | Unit Cost | Monthly Cost |
+|---------|----------|-----------|--------------|
+| **VNets** | 2 | Free | $0 |
+| **VNet Peering** | ~5 GB/day | $0.01/GB | ~$5 |
+| **Container Apps** | 9 apps | $5-15/app | ~$50-100 |
+| **SQL Databases** | 2 (Basic) | $5/db | ~$10 |
+| **Storage Accounts** | 2 (GRS) | $5/account | ~$10 |
+| **Private Endpoints** | 4 | $0.01/hr | ~$3 |
+| **Log Analytics** | 2 | $2.50/GB | ~$25 |
+
+**💵 Total: $100-150/month (~$3-5 per day)**
+
+### **Cost Optimization Tips**
+
+1. 💡 Use `terraform destroy` when not in use
+2. 💡 Scale down container apps during off-hours
+3. 💡 Reduce Log Analytics retention
+4. 💡 Use spot/dev-test pricing where available
+5. 💡 Monitor with Azure Cost Management
+
+---
+
+## 📁 Project Structure
+
+```
+multi-region-terraform-code/
+│
+├── 📄 README.md                          # This file
+├── 📄 DEPLOYMENT-GUIDE.md                 # Detailed deployment guide
+│
+├── 🔧 main.tf                            # Root Terraform config
+├── 🔧 variables.tf                       # Variable definitions
+├── 🔧 provider.tf                        # Azure provider setup
+├── 🔧 outputs.tf                         # Output definitions
+│
+├── 📂 modules/                           # Terraform modules
+│   ├── 📂 networking/                    # VNets, subnets, DNS, NSGs
+│   ├── 📂 database/                      # SQL servers, failover groups
+│   └── 📂 storage-modular/               # Storage accounts, private endpoints
+│
+└── 📂 microservices/                     # Python FastAPI services
+    ├── 📂 gateway/                       # Public gateway service
+    │   ├── app.py
+    │   ├── Dockerfile
+    │   └── requirements.txt
+    ├── 📂 api-service/                   # API service
+    │   ├── app.py
+    │   ├── Dockerfile
+    │   └── requirements.txt
+    ├── 📂 worker-service/                # Worker service
+    │   ├── app.py
+    │   ├── Dockerfile
+    │   └── requirements.txt
+    ├── 📂 processor-service/             # Processor service
+    │   ├── app.py
+    │   ├── Dockerfile
+    │   └── requirements.txt
+    └── 📂 scheduler-service/             # Scheduler service
+        ├── app.py
+        ├── Dockerfile
+        └── requirements.txt
+```
+
+---
+
+## 🎓 Key Learnings
+
+This project demonstrates:
+
+1. **Modular Architecture**: Separate resource groups for each service type
+2. **Zero-Trust Security**: Private endpoints, managed identities, no passwords
+3. **High Availability**: Multi-region deployment with automatic failover
+4. **Microservices Pattern**: Proper service isolation and communication
+5. **Infrastructure as Code**: Complete Terraform automation
+6. **Production Patterns**: NSGs, private DNS, VNet integration
 
 ---
 
@@ -527,238 +587,92 @@ Destroying resources stops all charges. You can redeploy anytime using `terrafor
 
 ### **Issue: Container Apps Not Starting**
 
-**Symptom**: Container apps show "Provisioning" or "Failed" status
-
-**Solution**:
-
-```powershell
-# Check container app logs
-az containerapp logs show `
-  --name demo-gateway-demo `
-  --resource-group demo-rg-demo-cb61e6 `
-  --tail 50
-
+```bash
 # Check container app status
-az containerapp show `
-  --name demo-gateway-demo `
-  --resource-group demo-rg-demo-cb61e6 `
+az containerapp show \
+  --name demo-gateway-prod \
+  --resource-group demo-gateway-rg-prod \
   --query "properties.runningStatus"
+
+# Check logs
+az containerapp logs show \
+  --name demo-gateway-prod \
+  --resource-group demo-gateway-rg-prod \
+  --tail 50
 ```
 
-### **Issue: SQL Failover Takes Too Long**
+### **Issue: Cannot Access Gateway**
 
-**Symptom**: Failover doesn't complete within 60 seconds
+```bash
+# Get gateway URL
+terraform output gateway_url
 
-**Solution**:
-
-```powershell
-# Check failover group status
-az sql failover-group show `
-  --name demo-appdb-fg-demo `
-  --resource-group demo-rg-demo-cb61e6 `
-  --server demo-sql-centralus-demo `
-  --query "{Name:name, Role:replicationRole, State:replicationState}"
+# Check ingress configuration
+az containerapp ingress show \
+  --name demo-gateway-prod \
+  --resource-group demo-gateway-rg-prod
 ```
 
-Wait up to 5 minutes. If still stuck, check Azure Portal for errors.
+### **Issue: SQL Connection Failures**
 
-### **Issue: Gateway Not Accessible**
+```bash
+# Check private endpoints
+az network private-endpoint list \
+  --resource-group demo-database-rg-prod \
+  --output table
 
-**Symptom**: HTTP request to gateway times out
-
-**Solution**:
-
-```powershell
-# Get the correct URL
-terraform output primary_gateway_url
-
-# Check if gateway is running
-az containerapp show `
-  --name demo-gateway-demo `
-  --resource-group demo-rg-demo-cb61e6 `
-  --query "properties.{Status:runningStatus, FQDN:configuration.ingress.fqdn}"
-
-# Check NSG rules
-az network nsg show `
-  --resource-group demo-rg-demo-cb61e6 `
-  --name demo-nsg-container-apps-centralus-demo
+# Check DNS resolution
+nslookup demo-sql-westus2-prod.database.windows.net
 ```
-
-### **Issue: Terraform State Lock**
-
-**Symptom**: "Error acquiring the state lock"
-
-**Solution**:
-
-```powershell
-# Force unlock (use with caution!)
-terraform force-unlock <LOCK_ID>
-```
-
-### **Issue: Insufficient Quota**
-
-**Symptom**: "QuotaExceeded" error during deployment
-
-**Solution**:
-
-1. Check quotas:
-   ```powershell
-   az vm list-usage --location centralus -o table
-   ```
-
-2. Request quota increase via Azure Portal
-3. Or change to different regions with available capacity
-
----
-
-## 📁 Project Structure
-
-```
-d:\multi-region\
-│
-├── 📄 README.md                    # This file - complete documentation
-├── 📄 QUICK-START.md               # Quick 3-step deployment guide
-├── 📄 COST-OPTIMIZED-DEMO.md       # Detailed demo walkthrough
-├── 📄 TESTING_GUIDE.md             # Comprehensive testing guide
-├── 📄 QUICK_DEPLOY.md              # Fast deployment instructions
-│
-├── 🔧 main.tf                      # Root Terraform configuration
-├── 🔧 variables.tf                 # Variable definitions
-├── 🔧 terraform.tfvars             # Configuration values
-├── 🔧 provider.tf                  # Azure provider setup
-├── 🔧 output.tf                    # Output definitions
-├── 📦 terraform.tfstate            # State file (auto-generated)
-│
-├── 🧪 quick-test.ps1               # Infrastructure validation script
-├── 🔥 dr-failover-test.ps1         # DR failover demonstration script
-├── 🧪 quick-test.sh                # Linux/Mac version of quick test
-│
-└── 📂 modules/                     # Terraform modules
-    │
-    ├── 📂 100_base/                # Layer 1: Networking foundation
-    │   ├── main.tf                 # VNets, subnets, DNS zones
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    ├── 📂 200_data/                # Layer 2: Databases
-    │   ├── main.tf                 # SQL servers, databases, failover groups
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    ├── 📂 300_compute/             # Layer 3: Container Apps
-    │   ├── main.tf                 # Container app environments & apps
-    │   ├── variables.tf
-    │   └── outputs.tf
-    │
-    └── 📂 storage/                 # Storage layer
-        ├── main.tf                 # Storage accounts & containers
-        ├── variables.tf
-        └── outputs.tf
-```
-
----
-
-## 🎓 Learning Resources
-
-### **Terraform**
-- [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [Terraform Modules](https://www.terraform.io/language/modules)
-
-### **Azure**
-- [Azure SQL Failover Groups](https://docs.microsoft.com/azure/sql-database/sql-database-auto-failover-group)
-- [Azure Container Apps](https://docs.microsoft.com/azure/container-apps/)
-- [Azure VNet Peering](https://docs.microsoft.com/azure/virtual-network/virtual-network-peering-overview)
-- [Azure Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview)
-
-### **Disaster Recovery**
-- [Azure Business Continuity](https://docs.microsoft.com/azure/architecture/framework/resiliency/overview)
-- [Multi-Region Architecture](https://docs.microsoft.com/azure/architecture/reference-architectures/app-service-web-app/multi-region)
 
 ---
 
 ## 🎯 Next Steps
 
-After mastering this demo, consider:
+After deploying this infrastructure:
 
-1. **Scale Up**
-   - Add West US 2 as third region
-   - Include additional microservices
-   - Implement Azure Traffic Manager
-
-2. **Enhanced Security**
-   - Add Azure Key Vault for secrets
-   - Implement Azure WAF
-   - Enable DDoS Protection
-
-3. **Monitoring**
-   - Set up Azure Monitor dashboards
-   - Configure alerting rules
-   - Implement Application Insights
-
-4. **Automation**
-   - CI/CD pipeline with GitHub Actions
-   - Automated testing
-   - Infrastructure validation
-
-5. **Production Hardening**
-   - Enable Azure Backup
-   - Implement RBAC
-   - Add compliance policies
+1. **Build Docker Images**: Build custom images from the microservices
+2. **Push to ACR**: Deploy to Azure Container Registry
+3. **Update Terraform**: Reference custom images instead of hello-world
+4. **Add CI/CD**: Implement GitHub Actions or Azure DevOps
+5. **Enable Monitoring**: Configure Application Insights
+6. **Add Tests**: Implement integration and e2e tests
 
 ---
 
-## 📊 Demo Checklist
+## 📊 Architecture Highlights
 
-Use this during your team presentation:
+### **What Makes This Special**
 
-- [ ] Infrastructure deployed successfully
-- [ ] All 7 tests in `quick-test.ps1` pass
-- [ ] Public gateway accessible via browser
-- [ ] SQL failover groups show "Primary" role
-- [ ] Container apps show "Running" status
-- [ ] Explain architecture diagram
-- [ ] Demonstrate manual SQL failover
-- [ ] Show failover completion (30-60 sec)
-- [ ] Verify new primary in East US 2
-- [ ] Demonstrate failback to Central US
-- [ ] Highlight zero data loss
-- [ ] Discuss cost savings vs production
-- [ ] Answer questions from team
-- [ ] Run `terraform destroy` after demo
+✅ **Modular by Design**: Each service type has its own resource group
+✅ **Security First**: Private endpoints, managed identities, zero passwords
+✅ **Production Ready**: NSGs, private DNS, auto-scaling, failover groups
+✅ **Cost Optimized**: Basic SQL tier, right-sized container apps
+✅ **Fully Automated**: Deploy entire infrastructure with one command
+✅ **Microservices**: 5 Python FastAPI services with proper isolation
 
----
+### **Enterprise Patterns**
 
-## 🤝 Contributing
-
-This is a demo project. Feel free to:
-- Fork and customize for your needs
-- Add additional regions
-- Include more services
-- Enhance security features
-
----
-
-## 📝 License
-
-This project is provided as-is for demonstration purposes.
+- 🏗️ Modular Terraform with reusable modules
+- 🔒 Zero-trust networking with private endpoints
+- 🔄 High availability with multi-region deployment
+- 📊 Observability with Log Analytics integration
+- 🎯 Separation of concerns with dedicated resource groups
 
 ---
 
 ## 🎉 Summary
 
-**You now have a complete, cost-optimized, multi-region DR infrastructure!**
+**You now have a production-grade, modular, multi-region Azure infrastructure!**
 
 ### **Key Commands**
 
-```powershell
+```bash
 # Deploy
 terraform apply -auto-approve
 
-# Test
-.\quick-test.ps1
-
-# Demo DR
-.\dr-failover-test.ps1
+# Test gateway
+curl https://$(terraform output -raw gateway_fqdn)/health
 
 # Cleanup
 terraform destroy -auto-approve
@@ -766,24 +680,24 @@ terraform destroy -auto-approve
 
 ### **What You've Built**
 
-✅ 2 Azure regions with VNet peering  
-✅ SQL databases with automatic failover  
-✅ Container apps across regions  
-✅ Geo-redundant storage  
-✅ Private endpoints for security  
-✅ Complete DR capabilities  
+✅ 8 separate resource groups for modular service isolation
+✅ 1 public gateway + 8 private services across 2 regions
+✅ SQL databases with automatic failover
+✅ Geo-redundant storage with private endpoints
+✅ 5 Python FastAPI microservices
+✅ Complete zero-trust security with managed identities
+✅ VNet integration and private DNS resolution
 
 ### **Cost**
 
-💵 **$150-250/month** (~$5-8/day)
+💵 **$100-150/month** (~$3-5/day)
 
-### **Demo Time**
+### **Deployment Time**
 
-⏱️ **15-20 minutes** to showcase full DR capabilities
+⏱️ **20-30 minutes** for complete infrastructure
 
 ---
 
-**Questions? Issues? Check the troubleshooting section above or review the detailed guides!**
+**Questions? Check DEPLOYMENT-GUIDE.md for detailed instructions!**
 
-🚀 **Ready to deploy? Run `terraform apply -auto-approve` and start your demo!**
-
+🚀 **Ready to deploy? Run `terraform apply -auto-approve`!**

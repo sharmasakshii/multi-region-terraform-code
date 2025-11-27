@@ -1,126 +1,106 @@
 # ======================================
-# ROOT OUTPUTS
+# MODULAR INFRASTRUCTURE OUTPUTS
 # ======================================
 
-# ==================
-# RESOURCE GROUP
-# ==================
-output "resource_group" {
+# Resource Groups
+output "resource_groups" {
+  description = "All resource group names"
   value = {
-    name     = module.base.resource_group.name
-    location = module.base.resource_group.location
-    id       = module.base.resource_group.id
+    networking = azurerm_resource_group.networking.name
+    services   = { for k, v in azurerm_resource_group.services : k => v.name }
+    database   = azurerm_resource_group.database.name
+    storage    = azurerm_resource_group.storage.name
   }
-  description = "Main resource group containing all resources"
 }
 
-# ==================
-# NETWORKING
-# ==================
+# Networking
 output "vnets" {
+  description = "Virtual Network IDs"
+  value       = module.networking.vnet_ids
+}
+
+# Container Apps
+output "gateway_url" {
+  description = "Public Gateway URL"
+  value       = "https://${azurerm_container_app.gateway.ingress[0].fqdn}"
+}
+
+output "gateway_fqdn" {
+  description = "Gateway FQDN"
+  value       = azurerm_container_app.gateway.ingress[0].fqdn
+}
+
+output "container_apps" {
+  description = "All container app names and regions"
   value = {
-    for region in var.regions :
-    region => module.base.vnets[region].name
-  }
-  description = "Virtual networks per region"
-}
-
-output "subnets" {
-  value = module.base.subnets
-  description = "All subnets organized by type and region"
-}
-
-# ==================
-# CONTAINER APPS
-# ==================
-output "primary_gateway_url" {
-  value       = "https://${module.compute.primary_gateway.fqdn}"
-  description = "Primary Gateway Container App URL (PUBLIC)"
-}
-
-output "primary_gateway_fqdn" {
-  value       = module.compute.primary_gateway.fqdn
-  description = "Primary Gateway FQDN"
-}
-
-output "container_app_environments" {
-  value = {
-    for region in var.regions :
-    region => {
-      name   = module.compute.container_app_environments[region].name
-      domain = module.compute.container_app_environments[region].default_domain
-      ip     = module.compute.container_app_environments[region].static_ip_address
+    gateway = {
+      name   = azurerm_container_app.gateway.name
+      fqdn   = azurerm_container_app.gateway.ingress[0].fqdn
+      public = true
     }
-  }
-  description = "Container App Environments details per region"
-}
-
-output "all_container_apps" {
-  value       = module.compute.all_container_apps
-  description = "All container apps FQDNs organized by service"
-}
-
-# ==================
-# DATABASES
-# ==================
-output "sql_servers" {
-  value = {
-    for region in var.regions :
-    region => {
-      name = module.data.sql_servers[region].name
-      fqdn = module.data.sql_servers[region].fqdn
-    }
-  }
-  description = "SQL servers per region"
-}
-
-output "sql_failover_groups" {
-  value = {
-    app_database       = module.data.failover_groups.app_database.name
-    analytics_database = module.data.failover_groups.analytics_database.name
-  }
-  description = "SQL failover group names"
-}
-
-output "sql_connection_strings" {
-  value       = module.data.connection_strings
-  sensitive   = true
-  description = "SQL connection strings"
-}
-
-# ==================
-# STORAGE
-# ==================
-output "storage_accounts" {
-  value = {
-    app_storage = {
+    api = {
       for region in var.regions :
-      region => module.storage.app_storage_accounts[region].name
+      region => {
+        name   = azurerm_container_app.api[region].name
+        fqdn   = try(azurerm_container_app.api[region].ingress[0].fqdn, "internal-only")
+        public = false
+      }
+    }
+    worker = {
+      for region in var.regions :
+      region => {
+        name   = azurerm_container_app.worker[region].name
+        fqdn   = try(azurerm_container_app.worker[region].ingress[0].fqdn, "internal-only")
+        public = false
+      }
+    }
+    processor = {
+      for region in var.regions :
+      region => {
+        name   = azurerm_container_app.processor[region].name
+        fqdn   = try(azurerm_container_app.processor[region].ingress[0].fqdn, "internal-only")
+        public = false
+      }
+    }
+    scheduler = {
+      for region in var.regions :
+      region => {
+        name   = azurerm_container_app.scheduler[region].name
+        fqdn   = try(azurerm_container_app.scheduler[region].ingress[0].fqdn, "internal-only")
+        public = false
+      }
     }
   }
-  description = "Storage account names (only app_storage for cost optimization)"
 }
 
-output "storage_connection_strings" {
-  value       = module.storage.storage_connection_strings
-  sensitive   = true
-  description = "Storage account connection strings"
+# Database
+output "sql_servers" {
+  description = "SQL Server FQDNs"
+  value       = module.database.sql_server_fqdns
 }
 
-# ==================
-# DEPLOYMENT SUMMARY
-# ==================
+output "sql_connection_string" {
+  description = "SQL Failover Group Connection String"
+  value       = module.database.connection_string
+  sensitive   = false
+}
+
+# Storage
+output "storage_accounts" {
+  description = "Storage Account Names"
+  value       = module.storage.storage_account_names
+}
+
+# Summary
 output "deployment_summary" {
+  description = "Deployment summary"
   value = {
-    project             = var.project
-    environment         = var.environment
-    primary_region      = var.primary_region
-    all_regions         = var.regions
-    public_endpoint     = "https://${module.compute.primary_gateway.fqdn}"
-    total_container_apps = 1 + (length(var.regions) * 2) # 1 public + 2 private per region (COST OPTIMIZED)
-    total_sql_servers   = length(var.regions)
-    total_sql_databases = length(var.regions) * 2 # 2 databases per region
-    total_storage_accounts = length(var.regions) * 1 # 1 storage account per region (COST OPTIMIZED)
+    project               = var.project
+    environment           = var.environment
+    regions               = var.regions
+    primary_region        = var.primary_region
+    resource_groups_count = 7
+    gateway_url           = "https://${azurerm_container_app.gateway.ingress[0].fqdn}"
+    architecture          = "Modular Multi-Region with Private Endpoints"
   }
-  description = "High-level deployment summary (cost optimized for demo)"
 }
