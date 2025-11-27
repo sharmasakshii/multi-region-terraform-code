@@ -1,0 +1,54 @@
+# ======================================
+# TERRAFORM VARIABLES - EXAMPLE TEMPLATE
+# ======================================
+# Copy this file to terraform.tfvars and update with your values
+
+# Project Configuration
+project     = "demo"
+environment = "demo"
+
+# Azure Regions - COST OPTIMIZED FOR DEMO
+# Using only 2 regions for DR demonstration
+primary_region = "centralus"
+regions = [
+  "centralus",   # Primary region
+  "eastus2"      # Secondary region for DR failover
+]
+
+# VNet Address Spaces - OPTIMIZED for 2 regions
+vnet_address_spaces = {
+  "centralus" = "10.10.0.0/16"
+  "eastus2"   = "10.20.0.0/16"
+}
+
+# SQL Server Configuration
+sql_admin_username = "sqladmin"
+# IMPORTANT: Change this password! Use Azure Key Vault or environment variables in production
+sql_admin_password = "CHANGE_ME_YourSecurePassword123!"
+
+# Container Apps Configuration - COST OPTIMIZED FOR DEMO
+# Only 2 microservices to demonstrate DR
+container_apps = {
+  "app1" = {
+    name         = "api-service"
+    cpu          = 0.25
+    memory       = "0.5Gi"
+    min_replicas = 1
+    max_replicas = 2
+  }
+  "app2" = {
+    name         = "worker-service"
+    cpu          = 0.25
+    memory       = "0.5Gi"
+    min_replicas = 1
+    max_replicas = 2
+  }
+}
+
+# Resource Tags
+tags = {
+  "ManagedBy"   = "Terraform"
+  "Project"     = "MultiRegion-DR"
+  "Environment" = "Demo"
+  "CostCenter"  = "Engineering"
+}
